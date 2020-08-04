@@ -1,0 +1,70 @@
+import { Component, OnInit } from '@angular/core';
+import { FormControl } from '@angular/forms';
+import { Observable } from 'rxjs';
+import { map, startWith } from 'rxjs/operators';
+
+@Component({
+  selector: 'autocomplete-display-example',
+  templateUrl: 'autocomplete-display-example.html',
+  styleUrls: ['autocomplete-display-example.css']
+})
+export class AutocompleteDisplayExample implements OnInit {
+
+  SelectedHuman: Human;
+  MyControl = new FormControl();
+  arrFilteredHumans: Observable<Human[]>;
+  arrHumans = [
+    new Human('1K59DN3', 27, 'John', 'Smith'),
+    new Human('9VH23JS', 67, 'William', 'Shakespeare'),
+    new Human('0QNF1HJ', 44, 'Elon', 'Musk')
+  ];
+
+  ngOnInit() {
+    this.arrFilteredHumans = this.MyControl.valueChanges.pipe(
+      startWith(''),
+      map((val) => this.filter(val))
+    );
+  }
+
+  filter(val: any): Human[] {
+    return this.arrHumans.filter((item: any) => {
+      //If the user selects an option, the value becomes a Human object,
+      //therefore we need to reset the val for the filter because an
+      //object cannot be used in this toLowerCase filter
+      if (typeof val === 'object') { val = "" };
+      const TempString = item.Name + ' - ' + item.Surname;
+      return TempString.toLowerCase().includes(val.toLowerCase());
+    });
+  }
+
+  AutoCompleteDisplay(item: any): string {
+    if (item == undefined) { return }
+    return item.Name + ' - ' + item.Surname;
+  }
+
+  OnHumanSelected(SelectedHuman) {
+    console.log('### Trigger');
+    console.log(SelectedHuman);
+    console.log(this.SelectedHuman);
+    
+  }
+}
+
+export class Human {
+  constructor(
+    public ID: string,
+    public Age: number,
+    public Name: string,
+    public Surname: string
+  ) { }
+}
+
+
+
+<input [(ngModel)]="SelectedHuman"  matInput [formControl]="MyControl" [matAutocomplete]="auto" placeholder="Human">
+
+<mat-autocomplete #auto="matAutocomplete" [displayWith]="AutoCompleteDisplay">
+	<mat-option (click)="OnHumanSelected(SelectedHuman)"  *ngFor="let human of arrFilteredHumans | async" [value]="human">
+    {{human.Name}} - {{human.Surname}}
+  </mat-option>
+</mat-autocomplete>
